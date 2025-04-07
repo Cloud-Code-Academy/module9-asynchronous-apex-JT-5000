@@ -27,9 +27,27 @@ public with sharing class NextStepFuture {
      * Opportunity Next Step field is a standard field
      * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testUpdateAllNextStep to cover test this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    @future
+    public static void nextStepText (String nextStepText) {
+        if (String.isEmpty(nextStepText)) {
+            return;
+        }
+        List<Account> accountList = [SELECT Id, Next_Step__c FROM Account];
+        for (Account acc : accountList) {
+            if (acc.Next_Step__c != nextStepText) {
+                acc.Next_Step__c = nextStepText;
+            }
+        }
+        Database.update(accountList);
+
+        List<Opportunity> oppList = [SELECT Id, NextStep FROM Opportunity];
+        for (Opportunity opp : oppList) {
+            if (opp.NextStep != nextStepText) {
+                opp.NextStep = nextStepText;
+            }
+        }
+        Database.update(oppList);
+    }
 
     /*
     * Question 2
@@ -39,32 +57,29 @@ public with sharing class NextStepFuture {
     */
     //Mix DML Error happens when you try to perform DML operations on setup and non-setup objects in a single transaction.
     public static void createDealAndUpdateRole() {
-        Opportunity bigDeal = new Opportunity();
-        insertBigDeal(bigDeal);
+        insertBigDealUsingFutureAnnotation(1000000, 'Big Deal', 'Closed Won', Date.today());
+        updateUserRoleNameWithFutureMethod();
+        }
 
+    
+    private static void insertBigDealUsingFutureAnnotation(Decimal amount, String name, String stageName, Date closeDate){
+        Opportunity opportunity = new Opportunity(
+            Amount = amount,
+            Name = name, 
+            StageName = stageName,   
+            CloseDate = closeDate
+        );
+        insert opportunity;
+    }
+
+    @future
+    private static void updateUserRoleNameWithFutureMethod(){
         UserRole[] roles = [SELECT Id, Name FROM UserRole WHERE Id = :UserInfo.getUserRoleId() OR Name = 'CRO' LIMIT 1];
-        updateUserRoleName(roles);
-    }
-
-    // Helper method to insert big deal
-    private static void insertBigDeal(Opportunity opp) {
-        opp.Amount = 1000000;
-        opp.Name = 'Big Deal';
-        opp.StageName = 'Closed Won'; 
-        opp.CloseDate = Date.today();
-        
-        insert opp;
-    }
-
-
-    // Helper method to update role name
-    private static void updateUserRoleName(UserRole[] roles){
         UserRole role;
         if (roles.isEmpty()) {
             role = new UserRole();
             role.portalType = 'None'; 
             role.CaseAccessForAccountOwner = 'Edit'; 
-            // role.OpportunityAccessForAccountOwner = 'Edit'; //This may need to be uncommented depending on your orgs Organization Wide Defaults(OWD) settings. If you are receiving FIELD_INTEGRITY_EXCEPTION, field integrity exception: unknown (Opportunity access level below organization default): [unknown], uncomment this line.
         } else {
             role = roles[0];
         }
