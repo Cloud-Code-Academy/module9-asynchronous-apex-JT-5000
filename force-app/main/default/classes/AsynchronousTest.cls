@@ -77,6 +77,8 @@ public with sharing class AsynchronousTest {
         System.assertEquals(1, updatedRoles.size(), 'UserRole should exist.');
     }
 
+    //Here's where we left off - above is complete.
+
     @IsTest
     static void nextStepQueueable_testEnqueueJob() {
         // Create test data
